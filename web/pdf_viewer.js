@@ -16,7 +16,35 @@
 import { ScrollMode, SpreadMode } from "./ui_utils.js";
 import { BaseViewer } from "./base_viewer.js";
 
-class PDFViewer extends BaseViewer {}
+class PDFViewer extends BaseViewer {
+  #containerTopLeft = null;
+
+  #resizeObserver = new ResizeObserver(this.#resizeObserverCallback.bind(this));
+
+  constructor(options) {
+    super(options);
+    this.#resizeObserver.observe(this.container);
+  }
+
+  get containerTopLeft() {
+    return (this.#containerTopLeft ||= [
+      this.container.offsetTop,
+      this.container.offsetLeft,
+    ]);
+  }
+
+  #resizeObserverCallback(entries) {
+    for (const entry of entries) {
+      if (entry.target === this.container) {
+        this.updateContainerHeightCss(
+          Math.floor(entry.borderBoxSize[0].blockSize)
+        );
+        this.#containerTopLeft = null;
+        break;
+      }
+    }
+  }
+}
 
 class PDFSinglePageViewer extends BaseViewer {
   _resetView() {
